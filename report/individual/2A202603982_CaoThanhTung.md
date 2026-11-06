@@ -16,7 +16,7 @@
 
 ## 2. Kết quả chính
 
-                                precision  recall  F1 (test)  F1 (SUB 40)  \
+                        precision  recall  F1 (test)  F1 (SUB 40)  \
 1. BoW + LogReg (tự code)            1.000   0.740      0.850        0.889   
 2. BoW + MLP (deep learning)         0.989   0.927      0.957        0.974   
 3a. Encoder (MiniLM) + kNN           0.875   0.948      0.910        1.000   
@@ -59,4 +59,11 @@
 
 ## 7. AI log và điều đã học
 
-*Mỗi lần dùng AI: hỏi gì, nhận gì, bạn sửa gì. Sau đó 2–3 câu: điều bạn hiểu ra hôm nay mà trước đó chưa hiểu.*
+| Phần | Bạn hỏi AI gì (prompt) | AI trả lời/viết gì | Bạn đã sửa / kiểm chứng gì |
+|---|---|---|---|
+| 4.1 | Dùng Gemini, nhờ bổ sung hàm `call_openai` | Viết thân hàm: import `OpenAI` trong hàm, tạo client, gọi `chat.completions.create` kèm `**provider_kwargs(max_tokens)`, đo latency bằng `time.perf_counter()`, trả `(text, latency)`; thêm `or ""` cho trường hợp `content` là `None`. Hướng dẫn đặt `LLM_PROVIDER = "gemini"`, thêm secret `GEMINI_API_KEY`, giữ `max_tokens=512` |chạy ô mock test `4.1 + 4.4`, chạy ô "Say hello", kiểm tra tên model bằng `list_models()` |
+| 4.2 | Nhờ viết `build_classification_prompt` | Viết prompt gồm mô tả nhiệm vụ, yêu cầu trả lời đúng một từ, chèn ví dụ few-shot cùng định dạng, kết thúc bằng `Message: """<text>"""\nLabel:` | chạy test `4.2–4.3`, in thử prompt few-shot |
+| 4.3 | Nhờ viết `parse_label` | Chuẩn hoá chuỗi, bỏ dấu câu, xử lý tiền tố `label`, kiểm tra `not spam` và `ham` **trước** `spam`, dùng `startswith`, trả `None` nếu không rõ | tự thử `"Not spam"`, `"I am not sure"` |
+| 4.4 | Nhờ viết `llm_classify_batch` | Viết vòng lặp qua từng tin: tạo prompt bằng `prompt_fn`, gọi `call_llm` qua `retry_with_backoff`, parse nhãn (None thành 0 và đếm `n_invalid`), ước tính token bằng `số_từ / 0.75`, tính USD theo `PRICE_PER_1M` | chạy test mock, kiểm tra `preds`, `usd > 0`, `len(latencies)` |
+
+>Trước đây tôi nghĩ gọi LLM chỉ là gửi prompt rồi đọc kết quả. Tôi hiểu ra rằng phần khó nằm ở các chi tiết xung quanh: tham số riêng của từng provider (model suy luận cần max_tokens lớn), việc parse câu trả lời phải xử lý các trường hợp như “not spam”, và chi phí được tính theo token nên prompt few-shot làm mỗi tin đắt hơn.
